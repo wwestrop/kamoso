@@ -108,7 +108,7 @@ Kirigami.ApplicationWindow
 
         onTriggered: {
             isCapturing = true;
-            countdown = 3;
+            countdown = configView.selectedCountdown;
             countdownTimer.running = true;
         }
 

@@ -14,6 +14,8 @@ import org.kde.kirigami 2.9 as Kirigami
 
 ColumnLayout {
 
+    property int selectedCountdown: 0
+
     Kirigami.FormLayout {
         Kirigami.Heading {
             text: "Options"
@@ -21,14 +23,17 @@ ColumnLayout {
         }
 
         QQC2.ComboBox {
-            model: [
-                "(none)",
-                "3s",
-                "5s",
-                "10s"
-            ]
+            id: countdownCombo
+            textRole: "text"
+            valueRole: "value"
+            model: ListModel {
+                ListElement { text: "(none)"; value: 0 }
+                ListElement { text: "3s"; value: 3 }
+                ListElement { text: "5s"; value: 5 }
+                ListElement { text: "10s"; value: 10 }
+            }
             Kirigami.FormData.label: i18n("Countdown")
-            onAccepted: applicationWindow().showPassiveNotification("Hello")
+            onActivated: selectedCountdown = currentValue
         }
 
         QQC2.Switch {
