@@ -174,7 +174,7 @@ ColumnLayout {
             interval: 500
             repeat: false
             onTriggered: {
-                sampleImage = webcam.sampleImage;
+                view.sampleImage = webcam.sampleImage;
             }
         }
 
