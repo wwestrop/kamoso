@@ -74,6 +74,29 @@ Kirigami.ApplicationWindow
         ]
     }
 
+    property bool isCapturing: false
+    property int countdown: 0;
+
+    Timer {
+        id: countdownTimer
+        running: false
+        interval: 1000
+        triggeredOnStart: true
+        repeat: true
+        onTriggered: {
+            if (countdown !== 0) {
+                photoMode.text = countdown;
+                countdown--;
+            }
+            else {
+                isCapturing = false; // TODO actually the webcam callback tells me this
+                running = false;
+                photoMode.text = i18n("Take a Picture")
+                webcam.takePhoto();
+            }
+        }
+    }
+
     Mode {
         id: photoMode
         mimes: "image/jpeg"
@@ -81,9 +104,13 @@ Kirigami.ApplicationWindow
         iconName: "camera-photo-symbolic"
         text: i18n("Take a Picture")
         nameFilter: "picture_*"
-        enabled: devicesModel.playingDevice
+        enabled: devicesModel.playingDevice && !isCapturing
 
-        onTriggered: webcam.takePhoto()
+        onTriggered: {
+            isCapturing = true;
+            countdown = 3;
+            countdownTimer.running = true;
+        }
 
         Connections {
             target: webcam
