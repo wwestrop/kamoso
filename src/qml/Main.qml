@@ -84,15 +84,13 @@ Kirigami.ApplicationWindow
             id: countdownTimer
             running: false
             interval: 1000
-            triggeredOnStart: true
+            triggeredOnStart: false
             repeat: true
             onTriggered: {
-                if (countdown !== 0) {
-                    countdown--;
-                }
-                else {
-                    isRunning = false; // TODO actually the webcam callback tells me this
-                    running = false;
+                countdown--;
+                if (countdown === 0) {
+                    isRunning = false;
+                    countdownTimer.running = false;
                     countdownCompleted();
                 }
             }
@@ -123,7 +121,7 @@ Kirigami.ApplicationWindow
 
         modeInfo: photoCountdown.isRunning ? photoCountdown.countdown : ""
 
-        onTriggered: photoCountdown.startCountdown(configView.selectedCountdown);
+        onTriggered: configView.selectedCountdown === 0 ? webcam.takePhoto() : photoCountdown.startCountdown(configView.selectedCountdown);
         Connections {
             target: webcam
             function onPhotoTaken(path) { awesomeAnimation(path) }
