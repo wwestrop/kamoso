@@ -101,6 +101,12 @@ Kirigami.ApplicationWindow
             countdown = countdownTime;
             countdownTimer.running = true;
         }
+
+        function cancel() {
+            isRunning = false;
+            countdown = 0;
+            countdownTimer.running = false;
+        }
     }
 
     Countdown {
@@ -115,13 +121,23 @@ Kirigami.ApplicationWindow
         mimes: "image/jpeg"
         checkable: false
         iconName: "camera-photo-symbolic"
-        text: photoCountdown.isRunning ? photoCountdown.countdown : i18n("Take a Picture")
+        text: !photoCountdown.isRunning ? i18n("Take a Picture") : i18n("Cancel")
         nameFilter: "picture_*"
-        enabled: devicesModel.playingDevice && !photoCountdown.isRunning
+        enabled: devicesModel.playingDevice
 
         modeInfo: photoCountdown.isRunning ? photoCountdown.countdown : ""
 
-        onTriggered: configView.selectedCountdown === 0 ? webcam.takePhoto() : photoCountdown.startCountdown(configView.selectedCountdown);
+        onTriggered: function() {
+             if (configView.selectedCountdown === 0) {
+                 webcam.takePhoto();
+             }
+             else if (!photoCountdown.isRunning) {
+                 photoCountdown.startCountdown(configView.selectedCountdown);
+             }
+             else {
+                 photoCountdown.cancel();
+             }
+        }
         Connections {
             target: webcam
             function onPhotoTaken(path) { awesomeAnimation(path) }
