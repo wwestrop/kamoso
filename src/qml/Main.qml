@@ -74,26 +74,41 @@ Kirigami.ApplicationWindow
         ]
     }
 
-    property bool isCapturing: false
-    property int countdown: 0;
+    component Countdown: Component {
+        property bool isRunning: false
+        property int countdown: 0
 
-    Timer {
-        id: countdownTimer
-        running: false
-        interval: 1000
-        triggeredOnStart: true
-        repeat: true
-        onTriggered: {
-            if (countdown !== 0) {
-                photoMode.text = countdown;
-                countdown--;
+        signal countdownCompleted()
+
+        property var countdownTimer: Timer {
+            id: countdownTimer
+            running: false
+            interval: 1000
+            triggeredOnStart: true
+            repeat: true
+            onTriggered: {
+                if (countdown !== 0) {
+                    countdown--;
+                }
+                else {
+                    isRunning = false; // TODO actually the webcam callback tells me this
+                    running = false;
+                    countdownCompleted();
+                }
             }
-            else {
-                isCapturing = false; // TODO actually the webcam callback tells me this
-                running = false;
-                photoMode.text = i18n("Take a Picture")
-                webcam.takePhoto();
-            }
+        }
+
+        function startCountdown(countdownTime) {
+            isRunning = true;
+            countdown = countdownTime;
+            countdownTimer.running = true;
+        }
+    }
+
+    Countdown {
+        id: photoCountdown
+        onCountdownCompleted: function() {
+            webcam.takePhoto();
         }
     }
 
@@ -102,16 +117,13 @@ Kirigami.ApplicationWindow
         mimes: "image/jpeg"
         checkable: false
         iconName: "camera-photo-symbolic"
-        text: i18n("Take a Picture")
+        text: photoCountdown.isRunning ? photoCountdown.countdown : i18n("Take a Picture")
         nameFilter: "picture_*"
-        enabled: devicesModel.playingDevice && !isCapturing
+        enabled: devicesModel.playingDevice && !photoCountdown.isRunning
 
-        onTriggered: {
-            isCapturing = true;
-            countdown = configView.selectedCountdown;
-            countdownTimer.running = true;
-        }
+        modeInfo: photoCountdown.isRunning ? photoCountdown.countdown : ""
 
+        onTriggered: photoCountdown.startCountdown(configView.selectedCountdown);
         Connections {
             target: webcam
             function onPhotoTaken(path) { awesomeAnimation(path) }
@@ -248,7 +260,7 @@ Kirigami.ApplicationWindow
                 if (burstMode.checked) {
                     return burstMode.modeInfo;
                 }
-                return "";
+                return photoMode.modeInfo;
             }
             color: "white"
             styleColor: "black"
