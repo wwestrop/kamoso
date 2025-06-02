@@ -35,10 +35,6 @@ ColumnLayout {
             Kirigami.FormData.label: i18n("Countdown")
             onActivated: selectedCountdown = currentValue
         }
-
-        QQC2.Switch {
-            Kirigami.FormData.label: i18n("Flash")
-        }
     }
 
     GridView {
