@@ -75,18 +75,70 @@ Kirigami.ApplicationWindow
         ]
     }
 
+    component Countdown: QtObject {
+        property bool isRunning: false
+        property int countdown: 0
+
+        signal countdownCompleted()
+
+        property var countdownTimer: Timer {
+            id: countdownTimer
+            running: false
+            interval: 1000
+            triggeredOnStart: false
+            repeat: true
+            onTriggered: {
+                countdown--;
+                if (countdown === 0) {
+                    isRunning = false;
+                    countdownTimer.running = false;
+                    countdownCompleted();
+                }
+            }
+        }
+
+        function startCountdown(countdownTime) {
+            isRunning = true;
+            countdown = countdownTime;
+            countdownTimer.running = true;
+        }
+
+        function cancel() {
+            isRunning = false;
+            countdown = 0;
+            countdownTimer.running = false;
+        }
+    }
+
+    Countdown {
+        id: photoCountdown
+        onCountdownCompleted: function() {
+            Kamoso.takePhoto();
+        }
+    }
+
     property Mode lastMode: photoMode
     Mode {
         id: photoMode
         mimes: "image/jpeg"
         checkable: false
         icon.name: "camera-photo-symbolic"
-        text: i18n("Take a Picture")
+        text: !photoCountdown.isRunning ? i18n("Take a Picture") : i18n("Cancel")
         nameFilter: "picture_*"
         enabled: DeviceManager.playingDevice && WebcamControl.readyForCapture
+        modeInfo: photoCountdown.isRunning ? photoCountdown.countdown : ""
 
         onTriggered: {
-            Kamoso.takePhoto()
+            if (configView.selectedCountdown === 0) {
+                Kamoso.takePhoto();
+            }
+            else if (!photoCountdown.isRunning) {
+                photoCountdown.startCountdown(configView.selectedCountdown);
+            }
+            else {
+                photoCountdown.cancel();
+            }
+
             lastMode = photoMode
         }
 
@@ -187,21 +239,8 @@ Kirigami.ApplicationWindow
         rightPadding: Kirigami.Units.smallSpacing
         bottomPadding: Kirigami.Units.smallSpacing
 
-        contentItem: QQC2.ScrollView {
-            Config {
-                id: configView
-
-                header: QQC2.Control {
-                    height: effectsGalleryHeading.height + Kirigami.Units.largeSpacing
-                    Kirigami.Heading {
-                        id: effectsGalleryHeading
-                        level: 1
-                        color: Kirigami.Theme.textColor
-                        elide: Text.ElideRight
-                        text: i18n("Effects Gallery")
-                    }
-                }
-            }
+        contentItem: Config {
+            id: configView
         }
     }
 
@@ -261,7 +300,7 @@ Kirigami.ApplicationWindow
                 if (burstMode.checked) {
                     return burstMode.modeInfo;
                 }
-                return "";
+                return photoMode.modeInfo;
             }
             color: "white"
             styleColor: "black"
